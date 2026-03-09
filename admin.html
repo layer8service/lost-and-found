@@ -1,0 +1,938 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lost & Found — Admin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet" />
+  <!-- Google Identity Services -->
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #f7f5f2;
+      --surface: #ffffff;
+      --border: #e8e3db;
+      --text: #2c2824;
+      --muted: #9e958a;
+      --accent: #e06c3a;
+      --accent-light: #fdf0ea;
+      --green: #4caf82;
+      --red: #e05252;
+      --shadow: 0 2px 12px rgba(0,0,0,0.08);
+    }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Nunito', sans-serif;
+      min-height: 100vh;
+    }
+
+    /* ── Header ── */
+    header {
+      background: var(--surface);
+      border-bottom: 2px solid var(--border);
+      padding: 1rem 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      flex-wrap: wrap;
+      box-shadow: var(--shadow);
+    }
+    header h1 { font-size: 1.3rem; font-weight: 800; }
+    header h1 span { color: var(--accent); }
+    #user-info {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      font-size: 0.82rem;
+      color: var(--muted);
+      font-weight: 600;
+    }
+    #user-info img {
+      width: 32px; height: 32px;
+      border-radius: 50%;
+      border: 2px solid var(--border);
+    }
+    #sign-out-btn {
+      background: none;
+      border: 1.5px solid var(--border);
+      color: var(--muted);
+      padding: 0.3rem 0.75rem;
+      border-radius: 20px;
+      font-family: 'Nunito', sans-serif;
+      font-size: 0.75rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    #sign-out-btn:hover { border-color: var(--red); color: var(--red); }
+
+    /* ── Login gate ── */
+    #login-screen {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 70vh;
+      gap: 1.5rem;
+      padding: 2rem;
+      text-align: center;
+    }
+    #login-screen .icon { font-size: 3.5rem; }
+    #login-screen h2 { font-size: 1.5rem; font-weight: 800; }
+    #login-screen p { color: var(--muted); max-width: 340px; line-height: 1.6; }
+
+    /* ── Main layout ── */
+    #admin-screen { display: none; }
+    .admin-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+      padding: 2rem;
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+    @media (max-width: 700px) { .admin-grid { grid-template-columns: 1fr; } }
+
+    .card {
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      border-radius: 12px;
+      padding: 1.5rem;
+      box-shadow: var(--shadow);
+    }
+    .card h2 {
+      font-size: 1rem;
+      font-weight: 800;
+      margin-bottom: 1.25rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .card h2 .card-icon { font-size: 1.1rem; }
+
+    /* ── Upload card ── */
+    #drop-zone {
+      border: 2px dashed var(--border);
+      border-radius: 10px;
+      padding: 2rem;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color 0.2s, background 0.2s;
+      position: relative;
+    }
+    #drop-zone:hover, #drop-zone.dragover {
+      border-color: var(--accent);
+      background: var(--accent-light);
+    }
+    #drop-zone input[type=file] {
+      position: absolute; inset: 0; opacity: 0; cursor: pointer;
+    }
+    #drop-zone .dz-icon { font-size: 2rem; margin-bottom: 0.5rem; }
+    #drop-zone p { color: var(--muted); font-size: 0.85rem; font-weight: 600; }
+    #drop-zone strong { color: var(--accent); }
+
+    #preview-wrap { display: none; margin-top: 1rem; }
+    #preview-img {
+      width: 100%;
+      max-height: 240px;
+      object-fit: cover;
+      border-radius: 8px;
+      border: 1.5px solid var(--border);
+    }
+
+    .field { margin-top: 1rem; }
+    .field label {
+      display: block;
+      font-size: 0.78rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      color: var(--muted);
+      margin-bottom: 0.4rem;
+    }
+    .field select, .field input[type=text] {
+      width: 100%;
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      padding: 0.6rem 0.85rem;
+      font-family: 'Nunito', sans-serif;
+      font-size: 0.88rem;
+      font-weight: 600;
+      color: var(--text);
+      background: var(--bg);
+      transition: border-color 0.2s;
+      appearance: auto;
+    }
+    .field select:focus, .field input:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+
+    .ai-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      font-size: 0.7rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      padding: 0.2rem 0.6rem;
+      border-radius: 20px;
+      margin-left: 0.5rem;
+    }
+    .ai-badge.off { background: #f0ede8; color: var(--muted); }
+    .ai-badge.on  { background: #e8f5ee; color: var(--green); }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      padding: 0.7rem 1.4rem;
+      border-radius: 8px;
+      font-family: 'Nunito', sans-serif;
+      font-size: 0.88rem;
+      font-weight: 800;
+      cursor: pointer;
+      transition: all 0.2s;
+      border: none;
+    }
+    .btn-primary {
+      background: var(--accent);
+      color: #fff;
+      width: 100%;
+      margin-top: 1.25rem;
+      font-size: 0.95rem;
+    }
+    .btn-primary:hover { background: #cc5e2e; }
+    .btn-primary:disabled {
+      opacity: 0.5; cursor: not-allowed;
+    }
+    .btn-danger {
+      background: #fdf0f0;
+      color: var(--red);
+      border: 1.5px solid #f5c6c6;
+    }
+    .btn-danger:hover { background: #fce3e3; }
+    .btn-secondary {
+      background: var(--bg);
+      color: var(--text);
+      border: 1.5px solid var(--border);
+    }
+    .btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
+
+    /* ── Status toast ── */
+    #toast {
+      position: fixed;
+      bottom: 1.5rem; left: 50%; transform: translateX(-50%) translateY(80px);
+      background: var(--text);
+      color: #fff;
+      padding: 0.75rem 1.5rem;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      font-weight: 700;
+      transition: transform 0.3s ease;
+      z-index: 999;
+      white-space: nowrap;
+    }
+    #toast.show { transform: translateX(-50%) translateY(0); }
+    #toast.success { background: var(--green); }
+    #toast.error   { background: var(--red); }
+
+    /* ── Items list ── */
+    #items-list { max-height: 420px; overflow-y: auto; }
+    .item-row {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.65rem 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .item-row:last-child { border-bottom: none; }
+    .item-thumb {
+      width: 48px; height: 48px;
+      object-fit: cover;
+      border-radius: 6px;
+      border: 1.5px solid var(--border);
+      flex-shrink: 0;
+    }
+    .item-info { flex: 1; min-width: 0; }
+    .item-info .icat {
+      font-size: 0.78rem; font-weight: 800;
+      color: var(--accent);
+      text-transform: uppercase; letter-spacing: 0.06em;
+    }
+    .item-info .idate {
+      font-size: 0.72rem; color: var(--muted); font-weight: 600; margin-top: 0.1rem;
+    }
+    .item-info .iby {
+      font-size: 0.68rem; color: var(--muted);
+    }
+    .del-btn {
+      background: none;
+      border: 1.5px solid var(--border);
+      color: var(--muted);
+      width: 28px; height: 28px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.8rem;
+      display: flex; align-items: center; justify-content: center;
+      transition: all 0.2s; flex-shrink: 0;
+    }
+    .del-btn:hover { border-color: var(--red); color: var(--red); background: #fdf0f0; }
+
+    /* ── Purge card ── */
+    .purge-row {
+      display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap;
+      margin-bottom: 0.75rem;
+    }
+    .purge-row select {
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      padding: 0.5rem 0.75rem;
+      font-family: 'Nunito', sans-serif;
+      font-size: 0.85rem;
+      font-weight: 700;
+      background: var(--bg);
+      color: var(--text);
+    }
+    #purge-preview {
+      font-size: 0.8rem; color: var(--muted); font-weight: 600;
+      margin-bottom: 1rem; min-height: 1.2em;
+    }
+
+    /* ── Settings card ── */
+    .setting-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.75rem 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .setting-row:last-child { border-bottom: none; }
+    .setting-label { font-size: 0.85rem; font-weight: 700; }
+    .setting-desc  { font-size: 0.72rem; color: var(--muted); margin-top: 0.15rem; }
+    .toggle {
+      position: relative; width: 40px; height: 22px; flex-shrink: 0;
+    }
+    .toggle input { opacity: 0; width: 0; height: 0; }
+    .toggle-slider {
+      position: absolute; inset: 0;
+      background: var(--border); border-radius: 22px;
+      cursor: pointer; transition: background 0.2s;
+    }
+    .toggle-slider::before {
+      content: ''; position: absolute;
+      width: 16px; height: 16px; border-radius: 50%;
+      background: #fff; top: 3px; left: 3px;
+      transition: transform 0.2s;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+    }
+    .toggle input:checked + .toggle-slider { background: var(--green); }
+    .toggle input:checked + .toggle-slider::before { transform: translateX(18px); }
+
+    .config-field {
+      margin-top: 0.75rem;
+    }
+    .config-field label {
+      font-size: 0.75rem; font-weight: 800;
+      text-transform: uppercase; letter-spacing: 0.07em;
+      color: var(--muted); display: block; margin-bottom: 0.35rem;
+    }
+    .config-field input {
+      width: 100%;
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      padding: 0.55rem 0.85rem;
+      font-family: 'Nunito', monospace;
+      font-size: 0.8rem;
+      background: var(--bg);
+      color: var(--text);
+    }
+    .config-field input:focus { outline: none; border-color: var(--accent); }
+
+    .warn-box {
+      background: #fffbf0;
+      border: 1.5px solid #f5e4a0;
+      border-radius: 8px;
+      padding: 0.75rem 1rem;
+      font-size: 0.78rem;
+      color: #8a7020;
+      font-weight: 600;
+      line-height: 1.5;
+      margin-top: 0.75rem;
+    }
+    .warn-box strong { color: #6a5010; }
+
+    .empty-state {
+      text-align: center; padding: 2rem 1rem;
+      color: var(--muted); font-size: 0.85rem; font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>🎒 Lost & Found <span>Admin</span></h1>
+  <div id="user-info" style="display:none">
+    <img id="user-avatar" src="" alt="" />
+    <span id="user-name"></span>
+    <button id="sign-out-btn">Sign out</button>
+  </div>
+</header>
+
+<!-- Login Screen -->
+<div id="login-screen">
+  <div class="icon">🔐</div>
+  <h2>Admin Sign In</h2>
+  <p>Sign in with your Google account to upload and manage lost & found items.</p>
+  <div id="google-signin-btn"></div>
+</div>
+
+<!-- Admin Screen -->
+<div id="admin-screen">
+  <div class="admin-grid">
+
+    <!-- Upload Card -->
+    <div class="card">
+      <h2><span class="card-icon">📷</span> Upload New Item</h2>
+
+      <div id="drop-zone">
+        <input type="file" id="file-input" accept="image/*" capture="environment" />
+        <div class="dz-icon">📁</div>
+        <p><strong>Tap to take photo</strong> or choose from library</p>
+        <p style="margin-top:0.3rem;font-size:0.75rem">JPG, PNG, HEIC supported</p>
+      </div>
+
+      <div id="preview-wrap">
+        <img id="preview-img" src="" alt="Preview" />
+      </div>
+
+      <div class="field">
+        <label>
+          Category
+          <span id="ai-status" class="ai-badge off">AI Off</span>
+        </label>
+        <select id="cat-select">
+          <option value="">— Select category —</option>
+          <option value="Jacket / Hoodie">Jacket / Hoodie</option>
+          <option value="Shirt / Pants">Shirt / Pants</option>
+          <option value="Water Bottle">Water Bottle</option>
+          <option value="Backpack / Bag">Backpack / Bag</option>
+          <option value="Other">Other</option>
+        </select>
+      </div>
+
+      <button class="btn btn-primary" id="upload-btn" disabled>
+        Upload Item
+      </button>
+    </div>
+
+    <!-- Manage Items Card -->
+    <div class="card">
+      <h2><span class="card-icon">📋</span> Current Items</h2>
+      <div id="items-list">
+        <div class="empty-state">Loading items…</div>
+      </div>
+    </div>
+
+    <!-- Purge Card -->
+    <div class="card">
+      <h2><span class="card-icon">🗑️</span> Purge Old Items</h2>
+      <div class="purge-row">
+        <select id="purge-select">
+          <option value="7">Older than 1 week</option>
+          <option value="14" selected>Older than 2 weeks</option>
+          <option value="30">Older than 1 month</option>
+          <option value="60">Older than 2 months</option>
+          <option value="90">Older than 3 months</option>
+        </select>
+      </div>
+      <div id="purge-preview"></div>
+      <button class="btn btn-danger" id="purge-btn">Purge Items</button>
+    </div>
+
+    <!-- Settings Card -->
+    <div class="card">
+      <h2><span class="card-icon">⚙️</span> Settings</h2>
+
+      <div class="setting-row">
+        <div>
+          <div class="setting-label">AI Auto-Categorization</div>
+          <div class="setting-desc">Uses Claude Vision to detect item type</div>
+        </div>
+        <label class="toggle">
+          <input type="checkbox" id="ai-toggle" />
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+
+      <div class="warn-box">
+        ⚠️ <strong>Privacy review pending.</strong> AI categorization sends photos to Anthropic's API for processing.
+        Enable only after your school has reviewed and approved this for anonymization compliance.
+        Photos are not stored by Anthropic beyond the API request.
+      </div>
+
+      <div class="config-field" style="margin-top:1rem">
+        <label>GitHub Personal Access Token</label>
+        <input type="password" id="gh-token" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx" />
+      </div>
+      <div class="config-field">
+        <label>GitHub Repo (owner/repo)</label>
+        <input type="text" id="gh-repo" placeholder="yourname/lost-and-found" />
+      </div>
+      <div class="config-field">
+        <label>Claude API Key <span style="color:var(--muted);font-weight:400;text-transform:none;letter-spacing:0">(required for AI categorization)</span></label>
+        <input type="password" id="claude-key" placeholder="sk-ant-xxxxxxxxxxxxxxxxxxxx" />
+      </div>
+
+      <button class="btn btn-secondary" id="save-settings-btn" style="margin-top:1rem;width:100%">
+        Save Settings
+      </button>
+
+      <div style="margin-top:0.75rem;font-size:0.72rem;color:var(--muted);line-height:1.5">
+        Settings are stored in your browser only (localStorage). Never share your tokens.
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+  // ─────────────────────────────────────────────────────────────────────────────
+  // SETUP INSTRUCTIONS
+  // ─────────────────────────────────────────────────────────────────────────────
+  // 1. GOOGLE OAUTH
+  //    a. Go to https://console.cloud.google.com/
+  //    b. Create a new project (e.g. "lost-and-found")
+  //    c. APIs & Services → Credentials → Create OAuth 2.0 Client ID
+  //    d. Type: Web Application
+  //    e. Authorized JS origins: https://YOUR_GITHUB_USERNAME.github.io
+  //    f. Paste the Client ID below:
+  const GOOGLE_CLIENT_ID = 'YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com';
+
+  // 2. GITHUB TOKEN
+  //    a. GitHub → Settings → Developer settings → Personal access tokens → Fine-grained
+  //    b. Permissions: Contents (read & write)
+  //    c. Paste it in the Settings card on this page (stored in your browser)
+
+  // 3. CLAUDE API KEY (optional — only needed for AI categorization)
+  //    a. https://console.anthropic.com/ → API Keys
+  //    b. Paste it in the Settings card on this page
+  //    c. Only enable AI toggle AFTER school approves privacy review
+
+  // 4. AI CATEGORIZATION PRIVACY NOTE
+  //    When enabled, each uploaded photo is sent to Anthropic's API with this prompt:
+  //    "Look at this lost and found item. Classify it as one of: Jacket / Hoodie,
+  //     Shirt / Pants, Water Bottle, Backpack / Bag, Other. Reply with just the category."
+  //    No personal information is included. Photos are not stored by Anthropic.
+  // ─────────────────────────────────────────────────────────────────────────────
+
+  const CATEGORIES = ['Jacket / Hoodie','Shirt / Pants','Water Bottle','Backpack / Bag','Other'];
+
+  // State
+  let currentUser = null;
+  let photosData  = [];
+  let selectedFile = null;
+
+  // Settings (persisted in localStorage)
+  function getSettings() {
+    return {
+      ghToken:   localStorage.getItem('lf_gh_token') || '',
+      ghRepo:    localStorage.getItem('lf_gh_repo')  || '',
+      claudeKey: localStorage.getItem('lf_claude_key') || '',
+      aiEnabled: localStorage.getItem('lf_ai_enabled') === 'true',
+    };
+  }
+  function saveSettings() {
+    localStorage.setItem('lf_gh_token',    document.getElementById('gh-token').value.trim());
+    localStorage.setItem('lf_gh_repo',     document.getElementById('gh-repo').value.trim());
+    localStorage.setItem('lf_claude_key',  document.getElementById('claude-key').value.trim());
+    localStorage.setItem('lf_ai_enabled',  document.getElementById('ai-toggle').checked);
+    toast('Settings saved', 'success');
+    updateAiBadge();
+  }
+
+  // ── Google OAuth ──────────────────────────────────────────────────────────────
+  window.addEventListener('load', () => {
+    if (!window.google) { setTimeout(initGoogle, 800); return; }
+    initGoogle();
+  });
+
+  function initGoogle() {
+    if (!window.google) return;
+    google.accounts.id.initialize({
+      client_id: GOOGLE_CLIENT_ID,
+      callback: handleGoogleSignIn,
+      auto_select: true,
+    });
+    google.accounts.id.renderButton(document.getElementById('google-signin-btn'), {
+      theme: 'outline', size: 'large', text: 'signin_with',
+    });
+    google.accounts.id.prompt();
+  }
+
+  function handleGoogleSignIn(response) {
+    const payload = parseJwt(response.credential);
+    currentUser = { name: payload.name, email: payload.email, picture: payload.picture };
+    showAdmin();
+  }
+
+  function parseJwt(token) {
+    const base64 = token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
+    return JSON.parse(atob(base64));
+  }
+
+  function showAdmin() {
+    document.getElementById('login-screen').style.display  = 'none';
+    document.getElementById('admin-screen').style.display  = 'block';
+    document.getElementById('user-info').style.display     = 'flex';
+    document.getElementById('user-name').textContent       = currentUser.name;
+    document.getElementById('user-avatar').src             = currentUser.picture;
+    loadSettingsIntoForm();
+    loadPhotos();
+    updatePurgePreview();
+  }
+
+  document.getElementById('sign-out-btn').addEventListener('click', () => {
+    google.accounts.id.disableAutoSelect();
+    currentUser = null;
+    document.getElementById('login-screen').style.display = 'flex';
+    document.getElementById('admin-screen').style.display = 'none';
+    document.getElementById('user-info').style.display    = 'none';
+  });
+
+  // ── Settings ─────────────────────────────────────────────────────────────────
+  function loadSettingsIntoForm() {
+    const s = getSettings();
+    document.getElementById('gh-token').value   = s.ghToken;
+    document.getElementById('gh-repo').value    = s.ghRepo;
+    document.getElementById('claude-key').value = s.claudeKey;
+    document.getElementById('ai-toggle').checked = s.aiEnabled;
+    updateAiBadge();
+  }
+  document.getElementById('save-settings-btn').addEventListener('click', saveSettings);
+  document.getElementById('ai-toggle').addEventListener('change', () => {
+    localStorage.setItem('lf_ai_enabled', document.getElementById('ai-toggle').checked);
+    updateAiBadge();
+  });
+  function updateAiBadge() {
+    const badge = document.getElementById('ai-status');
+    const on = getSettings().aiEnabled;
+    badge.textContent = on ? '✨ AI On' : 'AI Off';
+    badge.className = 'ai-badge ' + (on ? 'on' : 'off');
+  }
+
+  // ── GitHub helpers ────────────────────────────────────────────────────────────
+  async function ghGet(path) {
+    const { ghToken, ghRepo } = getSettings();
+    const res = await fetch(`https://api.github.com/repos/${ghRepo}/contents/${path}`, {
+      headers: { Authorization: `Bearer ${ghToken}`, Accept: 'application/vnd.github+json' }
+    });
+    if (!res.ok) throw new Error(`GitHub GET failed: ${res.status}`);
+    return res.json();
+  }
+
+  async function ghPut(path, content, message, sha = null) {
+    const { ghToken, ghRepo } = getSettings();
+    const body = { message, content };
+    if (sha) body.sha = sha;
+    const res = await fetch(`https://api.github.com/repos/${ghRepo}/contents/${path}`, {
+      method: 'PUT',
+      headers: {
+        Authorization: `Bearer ${ghToken}`,
+        Accept: 'application/vnd.github+json',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(body),
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.message || `GitHub PUT failed: ${res.status}`);
+    }
+    return res.json();
+  }
+
+  async function ghDelete(path, message, sha) {
+    const { ghToken, ghRepo } = getSettings();
+    const res = await fetch(`https://api.github.com/repos/${ghRepo}/contents/${path}`, {
+      method: 'DELETE',
+      headers: {
+        Authorization: `Bearer ${ghToken}`,
+        Accept: 'application/vnd.github+json',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ message, sha }),
+    });
+    if (!res.ok) throw new Error(`GitHub DELETE failed: ${res.status}`);
+  }
+
+  async function getPhotosSha() {
+    try {
+      const data = await ghGet('photos.json');
+      return { sha: data.sha, content: JSON.parse(atob(data.content.replace(/\n/g,''))) };
+    } catch {
+      return { sha: null, content: [] };
+    }
+  }
+
+  async function savePhotosJson(photos, message) {
+    const { sha } = await getPhotosSha();
+    const encoded = btoa(JSON.stringify(photos, null, 2));
+    await ghPut('photos.json', encoded, message, sha);
+    photosData = photos;
+    renderItemsList();
+    updatePurgePreview();
+  }
+
+  // ── Load photos ───────────────────────────────────────────────────────────────
+  async function loadPhotos() {
+    try {
+      const { content } = await getPhotosSha();
+      photosData = content;
+    } catch {
+      photosData = [];
+    }
+    renderItemsList();
+    updatePurgePreview();
+  }
+
+  function renderItemsList() {
+    const list = document.getElementById('items-list');
+    if (!photosData.length) {
+      list.innerHTML = '<div class="empty-state">No items uploaded yet.</div>';
+      return;
+    }
+    const sorted = [...photosData].sort((a,b) => new Date(b.date) - new Date(a.date));
+    const { ghRepo } = getSettings();
+    const [owner, repo] = (ghRepo || '/').split('/');
+    list.innerHTML = sorted.map(item => {
+      const src = item.url.startsWith('http')
+        ? item.url
+        : `https://raw.githubusercontent.com/${owner}/${repo}/main/${item.url}`;
+      return `
+        <div class="item-row">
+          <img class="item-thumb" src="${src}" alt="" loading="lazy" />
+          <div class="item-info">
+            <div class="icat">${item.category}</div>
+            <div class="idate">${new Date(item.date).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})}</div>
+            <div class="iby">by ${item.uploadedBy || 'unknown'}</div>
+          </div>
+          <button class="del-btn" data-id="${item.id}" title="Delete">🗑</button>
+        </div>`;
+    }).join('');
+
+    list.querySelectorAll('.del-btn').forEach(btn => {
+      btn.addEventListener('click', () => deleteItem(btn.dataset.id));
+    });
+  }
+
+  // ── File selection ────────────────────────────────────────────────────────────
+  document.getElementById('file-input').addEventListener('change', async e => {
+    const file = e.target.files[0];
+    if (!file) return;
+    selectedFile = file;
+
+    const url = URL.createObjectURL(file);
+    document.getElementById('preview-img').src = url;
+    document.getElementById('preview-wrap').style.display = 'block';
+    document.getElementById('upload-btn').disabled = false;
+
+    const s = getSettings();
+    if (s.aiEnabled && s.claudeKey) {
+      document.getElementById('ai-status').textContent = '✨ Thinking…';
+      try {
+        const cat = await classifyWithClaude(file, s.claudeKey);
+        document.getElementById('cat-select').value = cat;
+        document.getElementById('ai-status').textContent = '✨ AI On';
+        toast(`AI detected: ${cat}`, 'success');
+      } catch(err) {
+        document.getElementById('ai-status').textContent = '✨ AI On';
+        toast('AI classification failed — please select manually', 'error');
+      }
+    }
+  });
+
+  // Drag and drop
+  const dz = document.getElementById('drop-zone');
+  dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('dragover'); });
+  dz.addEventListener('dragleave', () => dz.classList.remove('dragover'));
+  dz.addEventListener('drop', e => {
+    e.preventDefault(); dz.classList.remove('dragover');
+    const file = e.dataTransfer.files[0];
+    if (file && file.type.startsWith('image/')) {
+      document.getElementById('file-input').files = e.dataTransfer.files;
+      document.getElementById('file-input').dispatchEvent(new Event('change'));
+    }
+  });
+
+  // ── Claude Vision ─────────────────────────────────────────────────────────────
+  // PRIVACY NOTE: Only the image and this short prompt are sent. No names, no metadata.
+  // Anthropic does not retain images sent via the API beyond the request lifetime.
+  async function classifyWithClaude(file, apiKey) {
+    const base64 = await fileToBase64(file);
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+      },
+      body: JSON.stringify({
+        model: 'claude-opus-4-5',
+        max_tokens: 50,
+        messages: [{
+          role: 'user',
+          content: [
+            { type: 'image', source: { type: 'base64', media_type: file.type, data: base64 } },
+            { type: 'text', text: 'This is a lost and found item photo. Classify it as exactly one of: "Jacket / Hoodie", "Shirt / Pants", "Water Bottle", "Backpack / Bag", "Other". Reply with just the category name, nothing else.' }
+          ]
+        }]
+      })
+    });
+    if (!res.ok) throw new Error('Claude API error');
+    const data = await res.json();
+    const reply = data.content[0].text.trim();
+    return CATEGORIES.includes(reply) ? reply : 'Other';
+  }
+
+  function fileToBase64(file) {
+    return new Promise((res, rej) => {
+      const r = new FileReader();
+      r.onload = () => res(r.result.split(',')[1]);
+      r.onerror = rej;
+      r.readAsDataURL(file);
+    });
+  }
+
+  // ── Upload ────────────────────────────────────────────────────────────────────
+  document.getElementById('upload-btn').addEventListener('click', async () => {
+    const cat = document.getElementById('cat-select').value;
+    if (!selectedFile) { toast('Please select a photo', 'error'); return; }
+    if (!cat) { toast('Please select a category', 'error'); return; }
+
+    const { ghToken, ghRepo } = getSettings();
+    if (!ghToken || !ghRepo) { toast('GitHub token and repo not configured in Settings', 'error'); return; }
+
+    const btn = document.getElementById('upload-btn');
+    btn.disabled = true;
+    btn.textContent = 'Uploading…';
+
+    try {
+      // 1. Upload image to images/ folder
+      const ext = selectedFile.name.split('.').pop() || 'jpg';
+      const id  = Date.now().toString(36) + Math.random().toString(36).slice(2,6);
+      const imgPath = `images/${id}.${ext}`;
+      const base64 = await fileToBase64(selectedFile);
+      await ghPut(imgPath, base64, `Add lost item photo ${id}`);
+
+      // 2. Update photos.json
+      const { sha, content: existing } = await getPhotosSha();
+      const newItem = {
+        id,
+        url: imgPath,
+        category: cat,
+        date: new Date().toISOString(),
+        uploadedBy: currentUser.name,
+        uploadedByEmail: currentUser.email,
+      };
+      const updated = [...existing, newItem];
+      const encoded = btoa(JSON.stringify(updated, null, 2));
+      await ghPut('photos.json', encoded, `Add lost item: ${cat} (${id})`, sha);
+
+      photosData = updated;
+      renderItemsList();
+      updatePurgePreview();
+
+      // Reset form
+      selectedFile = null;
+      document.getElementById('file-input').value = '';
+      document.getElementById('preview-wrap').style.display = 'none';
+      document.getElementById('cat-select').value = '';
+      toast('Item uploaded!', 'success');
+    } catch(err) {
+      toast('Upload failed: ' + err.message, 'error');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Upload Item';
+    }
+  });
+
+  // ── Delete item ───────────────────────────────────────────────────────────────
+  async function deleteItem(id) {
+    if (!confirm('Remove this item from the gallery?')) return;
+    const { ghToken, ghRepo } = getSettings();
+    if (!ghToken) { toast('GitHub token not configured', 'error'); return; }
+
+    try {
+      const item = photosData.find(i => i.id === id);
+      if (!item) return;
+
+      // Delete image file
+      try {
+        const imgData = await ghGet(item.url);
+        await ghDelete(item.url, `Remove lost item ${id}`, imgData.sha);
+      } catch { /* image may already be gone */ }
+
+      // Update photos.json
+      const updated = photosData.filter(i => i.id !== id);
+      await savePhotosJson(updated, `Remove lost item ${id}`);
+      toast('Item removed', 'success');
+    } catch(err) {
+      toast('Delete failed: ' + err.message, 'error');
+    }
+  }
+
+  // ── Purge ─────────────────────────────────────────────────────────────────────
+  document.getElementById('purge-select').addEventListener('change', updatePurgePreview);
+
+  function updatePurgePreview() {
+    const days = parseInt(document.getElementById('purge-select').value);
+    const cutoff = Date.now() - days * 24 * 60 * 60 * 1000;
+    const count = photosData.filter(i => new Date(i.date).getTime() < cutoff).length;
+    document.getElementById('purge-preview').textContent =
+      count > 0 ? `${count} item${count !== 1 ? 's' : ''} would be removed.` : 'No items to purge.';
+  }
+
+  document.getElementById('purge-btn').addEventListener('click', async () => {
+    const days = parseInt(document.getElementById('purge-select').value);
+    const cutoff = Date.now() - days * 24 * 60 * 60 * 1000;
+    const toRemove = photosData.filter(i => new Date(i.date).getTime() < cutoff);
+    if (!toRemove.length) { toast('Nothing to purge!', 'success'); return; }
+    if (!confirm(`Remove ${toRemove.length} item${toRemove.length !== 1 ? 's' : ''} older than ${days} days?`)) return;
+
+    const { ghToken } = getSettings();
+    if (!ghToken) { toast('GitHub token not configured', 'error'); return; }
+
+    document.getElementById('purge-btn').disabled = true;
+    let removed = 0;
+    for (const item of toRemove) {
+      try {
+        const imgData = await ghGet(item.url);
+        await ghDelete(item.url, `Purge old item ${item.id}`, imgData.sha);
+        removed++;
+      } catch { /* continue */ }
+    }
+    const updated = photosData.filter(i => new Date(i.date).getTime() >= cutoff);
+    await savePhotosJson(updated, `Purge ${removed} old items`);
+    toast(`Purged ${removed} item${removed !== 1 ? 's' : ''}`, 'success');
+    document.getElementById('purge-btn').disabled = false;
+  });
+
+  // ── Toast ─────────────────────────────────────────────────────────────────────
+  function toast(msg, type = '') {
+    const el = document.getElementById('toast');
+    el.textContent = msg;
+    el.className = 'show ' + type;
+    clearTimeout(el._t);
+    el._t = setTimeout(() => { el.className = ''; }, 3000);
+  }
+</script>
+</body>
+</html>

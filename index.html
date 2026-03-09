@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lost & Found</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #f7f5f2;
+      --surface: #ffffff;
+      --border: #e8e3db;
+      --text: #2c2824;
+      --muted: #9e958a;
+      --accent: #e06c3a;
+      --accent-light: #fdf0ea;
+      --green: #4caf82;
+      --shadow: 0 2px 12px rgba(0,0,0,0.08);
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Nunito', sans-serif;
+      min-height: 100vh;
+    }
+
+    /* ── Header ── */
+    header {
+      background: var(--surface);
+      border-bottom: 2px solid var(--border);
+      padding: 1.25rem 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      flex-wrap: wrap;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: var(--shadow);
+    }
+
+    .header-left h1 {
+      font-size: 1.5rem;
+      font-weight: 800;
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .header-left h1 span { color: var(--accent); }
+    .header-left p {
+      font-size: 0.78rem;
+      color: var(--muted);
+      margin-top: 0.1rem;
+    }
+
+    /* ── Filters ── */
+    .filters {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      padding: 1.25rem 2rem 0.75rem;
+      align-items: center;
+    }
+    .filter-label {
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-right: 0.25rem;
+    }
+    .filter-btn {
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      color: var(--muted);
+      padding: 0.35rem 0.9rem;
+      border-radius: 20px;
+      font-family: 'Nunito', sans-serif;
+      font-size: 0.8rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .filter-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .filter-btn.active {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #fff;
+    }
+
+    /* ── Empty state ── */
+    .empty {
+      text-align: center;
+      padding: 5rem 2rem;
+      color: var(--muted);
+      display: none;
+    }
+    .empty .icon { font-size: 3rem; margin-bottom: 1rem; }
+    .empty p { font-size: 1rem; font-weight: 600; }
+
+    /* ── Gallery ── */
+    .gallery {
+      column-count: 4;
+      column-gap: 12px;
+      padding: 1rem 2rem 4rem;
+      max-width: 1500px;
+      margin: 0 auto;
+    }
+    @media (max-width: 1100px) { .gallery { column-count: 3; } }
+    @media (max-width: 720px)  { .gallery { column-count: 2; } }
+    @media (max-width: 420px)  { .gallery { column-count: 1; } }
+
+    .tile {
+      break-inside: avoid;
+      margin-bottom: 12px;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+      border-radius: 10px;
+      background: var(--surface);
+      box-shadow: var(--shadow);
+      opacity: 0;
+      transform: translateY(14px);
+      animation: fadeUp 0.4s ease forwards;
+      border: 1.5px solid var(--border);
+      transition: box-shadow 0.2s, transform 0.2s;
+    }
+    .tile:hover {
+      box-shadow: 0 8px 28px rgba(0,0,0,0.13);
+      transform: translateY(-2px);
+    }
+
+    @keyframes fadeUp {
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .tile img {
+      width: 100%;
+      display: block;
+      transition: transform 0.35s ease;
+    }
+    .tile:hover img { transform: scale(1.03); }
+
+    .tile-meta {
+      padding: 0.6rem 0.75rem 0.65rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.5rem;
+    }
+    .tile-category {
+      font-size: 0.72rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      background: var(--accent-light);
+      color: var(--accent);
+      padding: 0.2rem 0.55rem;
+      border-radius: 20px;
+    }
+    .tile-date {
+      font-size: 0.7rem;
+      color: var(--muted);
+      font-weight: 600;
+    }
+    .tile-uploader {
+      font-size: 0.65rem;
+      color: var(--muted);
+      padding: 0 0.75rem 0.5rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* ── NEW badge ── */
+    .badge-new {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      background: var(--green);
+      color: #fff;
+      font-size: 0.65rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      padding: 0.2rem 0.5rem;
+      border-radius: 20px;
+    }
+
+    /* ── Lightbox ── */
+    #lightbox {
+      position: fixed;
+      inset: 0;
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(10,8,6,0.92);
+      backdrop-filter: blur(10px);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+    }
+    #lightbox.active { opacity: 1; pointer-events: all; }
+
+    #lb-wrap {
+      position: relative;
+      max-width: 88vw;
+      max-height: 82vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    #lb-img {
+      max-width: 88vw;
+      max-height: 78vh;
+      object-fit: contain;
+      border-radius: 8px;
+      box-shadow: 0 40px 100px rgba(0,0,0,0.7);
+      transition: opacity 0.22s ease, transform 0.22s ease;
+    }
+    #lb-img.switching { opacity: 0; transform: scale(0.96); }
+
+    .lb-nav {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      background: rgba(255,255,255,0.1);
+      border: 1.5px solid rgba(255,255,255,0.2);
+      color: #fff;
+      width: 46px; height: 46px;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.1rem;
+      transition: background 0.2s, transform 0.2s;
+      z-index: 10;
+    }
+    .lb-nav:hover { background: rgba(224,108,58,0.5); transform: translateY(-50%) scale(1.08); }
+    #lb-prev { left: -62px; }
+    #lb-next { right: -62px; }
+
+    @media (max-width: 600px) {
+      #lb-prev { left: 6px; }
+      #lb-next { right: 6px; }
+    }
+
+    #lb-info {
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      background: linear-gradient(transparent, rgba(0,0,0,0.7));
+      padding: 2rem 2rem 1.5rem;
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 1rem;
+    }
+    #lb-info-left .lb-cat {
+      font-size: 0.75rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--accent);
+      margin-bottom: 0.25rem;
+    }
+    #lb-info-left .lb-date {
+      font-size: 0.8rem;
+      color: rgba(255,255,255,0.7);
+      font-weight: 600;
+    }
+    #lb-info-left .lb-uploader {
+      font-size: 0.72rem;
+      color: rgba(255,255,255,0.45);
+      margin-top: 0.15rem;
+    }
+    #lb-counter {
+      font-size: 0.75rem;
+      color: rgba(255,255,255,0.45);
+      font-weight: 700;
+      letter-spacing: 0.1em;
+    }
+
+    #lb-close {
+      position: fixed;
+      top: 1.25rem; right: 1.25rem;
+      background: rgba(255,255,255,0.08);
+      border: 1.5px solid rgba(255,255,255,0.15);
+      color: rgba(255,255,255,0.7);
+      width: 38px; height: 38px;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1rem;
+      transition: color 0.2s, background 0.2s;
+    }
+    #lb-close:hover { color: #fff; background: rgba(255,255,255,0.15); }
+
+    #item-count {
+      font-size: 0.78rem;
+      color: var(--muted);
+      font-weight: 700;
+      padding: 0 2rem 0.5rem;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="header-left">
+    <h1>🎒 Lost <span>&</span> Found</h1>
+    <p>See something that belongs to your child? Ask them to check the lost & found!</p>
+  </div>
+</header>
+
+<div class="filters" id="filters">
+  <span class="filter-label">Filter:</span>
+  <button class="filter-btn active" data-cat="all">All Items</button>
+  <button class="filter-btn" data-cat="Jacket / Hoodie">Jackets & Hoodies</button>
+  <button class="filter-btn" data-cat="Shirt / Pants">Shirts & Pants</button>
+  <button class="filter-btn" data-cat="Water Bottle">Water Bottles</button>
+  <button class="filter-btn" data-cat="Backpack / Bag">Backpacks & Bags</button>
+  <button class="filter-btn" data-cat="Other">Other</button>
+</div>
+
+<div id="item-count"></div>
+
+<div class="gallery" id="gallery"></div>
+<div class="empty" id="empty">
+  <div class="icon">🎉</div>
+  <p>No items in this category right now!</p>
+</div>
+
+<!-- Lightbox -->
+<div id="lightbox">
+  <div id="lb-wrap">
+    <button class="lb-nav" id="lb-prev">&#8592;</button>
+    <img id="lb-img" src="" alt="" />
+    <button class="lb-nav" id="lb-next">&#8594;</button>
+  </div>
+  <button id="lb-close">&#x2715;</button>
+  <div id="lb-info">
+    <div id="lb-info-left">
+      <div class="lb-cat" id="lb-cat"></div>
+      <div class="lb-date" id="lb-date"></div>
+      <div class="lb-uploader" id="lb-uploader"></div>
+    </div>
+    <div id="lb-counter"></div>
+  </div>
+</div>
+
+<script>
+  // ─────────────────────────────────────────────────────────────────
+  // CONFIG — update REPO_OWNER and REPO_NAME to match your GitHub repo
+  // ─────────────────────────────────────────────────────────────────
+  const REPO_OWNER = 'layer8service';
+  const REPO_NAME  = 'lost-and-found';
+  const PHOTOS_URL = `https://raw.githubusercontent.com/${REPO_OWNER}/${REPO_NAME}/main/photos.json`;
+
+  let allItems = [];
+  let filtered = [];
+  let currentLbIndex = 0;
+  let activeCategory = 'all';
+
+  // ── Load photos.json ──────────────────────────────────────────────
+  async function loadPhotos() {
+    try {
+      const res = await fetch(PHOTOS_URL + '?t=' + Date.now());
+      if (!res.ok) throw new Error('not found');
+      allItems = await res.json();
+    } catch {
+      allItems = [];
+    }
+    renderGallery();
+  }
+
+  // ── Render ────────────────────────────────────────────────────────
+  function renderGallery() {
+    const gallery = document.getElementById('gallery');
+    const empty   = document.getElementById('empty');
+    const count   = document.getElementById('item-count');
+    gallery.innerHTML = '';
+
+    filtered = activeCategory === 'all'
+      ? [...allItems]
+      : allItems.filter(i => i.category === activeCategory);
+
+    // Sort newest first
+    filtered.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+    if (filtered.length === 0) {
+      empty.style.display = 'block';
+      count.textContent = '';
+      return;
+    }
+    empty.style.display = 'none';
+    count.textContent = `${filtered.length} item${filtered.length !== 1 ? 's' : ''} found`;
+
+    const now = Date.now();
+
+    filtered.forEach((item, i) => {
+      const tile = document.createElement('div');
+      tile.className = 'tile';
+      tile.style.animationDelay = `${i * 40}ms`;
+
+      const isNew = (now - new Date(item.date).getTime()) < 2 * 24 * 60 * 60 * 1000;
+
+      const imgSrc = item.url.startsWith('http')
+        ? item.url
+        : `https://raw.githubusercontent.com/${REPO_OWNER}/${REPO_NAME}/main/${item.url}`;
+
+      tile.innerHTML = `
+        ${isNew ? '<div class="badge-new">New</div>' : ''}
+        <img src="${imgSrc}" alt="${item.category}" loading="lazy" />
+        <div class="tile-meta">
+          <span class="tile-category">${item.category}</span>
+          <span class="tile-date">${formatDate(item.date)}</span>
+        </div>
+        <div class="tile-uploader">Added by ${item.uploadedBy || 'staff'}</div>
+      `;
+      tile.addEventListener('click', () => openLightbox(i));
+      gallery.appendChild(tile);
+    });
+  }
+
+  function formatDate(iso) {
+    const d = new Date(iso);
+    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  }
+
+  // ── Category filters ──────────────────────────────────────────────
+  document.querySelectorAll('.filter-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      activeCategory = btn.dataset.cat;
+      renderGallery();
+    });
+  });
+
+  // ── Lightbox ──────────────────────────────────────────────────────
+  const lb       = document.getElementById('lightbox');
+  const lbImg    = document.getElementById('lb-img');
+
+  function openLightbox(index) {
+    currentLbIndex = index;
+    updateLightbox();
+    lb.classList.add('active');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeLightbox() {
+    lb.classList.remove('active');
+    document.body.style.overflow = '';
+  }
+
+  function goTo(index) {
+    lbImg.classList.add('switching');
+    setTimeout(() => {
+      currentLbIndex = (index + filtered.length) % filtered.length;
+      updateLightbox();
+      lbImg.classList.remove('switching');
+    }, 200);
+  }
+
+  function updateLightbox() {
+    const item = filtered[currentLbIndex];
+    if (!item) return;
+    const imgSrc = item.url.startsWith('http')
+      ? item.url
+      : `https://raw.githubusercontent.com/${REPO_OWNER}/${REPO_NAME}/main/${item.url}`;
+    lbImg.src = imgSrc;
+    lbImg.alt = item.category;
+    document.getElementById('lb-cat').textContent = item.category;
+    document.getElementById('lb-date').textContent = `Found ${formatDate(item.date)}`;
+    document.getElementById('lb-uploader').textContent = `Added by ${item.uploadedBy || 'staff'}`;
+    document.getElementById('lb-counter').textContent = `${currentLbIndex + 1} / ${filtered.length}`;
+  }
+
+  document.getElementById('lb-prev').addEventListener('click', () => goTo(currentLbIndex - 1));
+  document.getElementById('lb-next').addEventListener('click', () => goTo(currentLbIndex + 1));
+  document.getElementById('lb-close').addEventListener('click', closeLightbox);
+  lb.addEventListener('click', e => { if (e.target === lb) closeLightbox(); });
+
+  document.addEventListener('keydown', e => {
+    if (!lb.classList.contains('active')) return;
+    if (e.key === 'ArrowLeft')  goTo(currentLbIndex - 1);
+    if (e.key === 'ArrowRight') goTo(currentLbIndex + 1);
+    if (e.key === 'Escape')     closeLightbox();
+  });
+
+  let touchStartX = 0;
+  lb.addEventListener('touchstart', e => { touchStartX = e.touches[0].clientX; }, { passive: true });
+  lb.addEventListener('touchend', e => {
+    const dx = e.changedTouches[0].clientX - touchStartX;
+    if (Math.abs(dx) > 40) goTo(dx < 0 ? currentLbIndex + 1 : currentLbIndex - 1);
+  });
+
+  loadPhotos();
+</script>
+</body>
+</html>

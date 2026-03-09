@@ -1,0 +1,98 @@
+[
+  {
+    "id": "demo001",
+    "url": "https://images.pexels.com/photos/1183266/pexels-photo-1183266.jpeg?w=600",
+    "category": "Jacket / Hoodie",
+    "date": "2026-03-09T08:00:00.000Z",
+    "uploadedBy": "Demo Staff",
+    "uploadedByEmail": "demo@school.org"
+  },
+  {
+    "id": "demo002",
+    "url": "https://images.pexels.com/photos/2832382/pexels-photo-2832382.jpeg?w=600",
+    "category": "Jacket / Hoodie",
+    "date": "2026-03-08T09:15:00.000Z",
+    "uploadedBy": "Demo Staff",
+    "uploadedByEmail": "demo@school.org"
+  },
+  {
+    "id": "demo003",
+    "url": "https://images.pexels.com/photos/996329/pexels-photo-996329.jpeg?w=600",
+    "category": "Shirt / Pants",
+    "date": "2026-03-08T10:30:00.000Z",
+    "uploadedBy": "Demo Staff",
+    "uploadedByEmail": "demo@school.org"
+  },
+  {
+    "id": "demo004",
+    "url": "https://images.pexels.com/photos/298863/pexels-photo-298863.jpeg?w=600",
+    "category": "Shirt / Pants",
+    "date": "2026-03-07T11:00:00.000Z",
+    "uploadedBy": "Demo Staff",
+    "uploadedByEmail": "demo@school.org"
+  },
+  {
+    "id": "demo005",
+    "url": "https://images.pexels.com/photos/1000084/pexels-photo-1000084.jpeg?w=600",
+    "category": "Water Bottle",
+    "date": "2026-03-07T13:00:00.000Z",
+    "uploadedBy": "Demo Staff",
+    "uploadedByEmail": "demo@school.org"
+  },
+  {
+    "id": "demo006",
+    "url": "https://images.pexels.com/photos/1342529/pexels-photo-1342529.jpeg?w=600",
+    "category": "Water Bottle",
+    "date": "2026-03-06T09:00:00.000Z",
+    "uploadedBy": "Demo Staff",
+    "uploadedByEmail": "demo@school.org"
+  },
+  {
+    "id": "demo007",
+    "url": "https://images.pexels.com/photos/1152077/pexels-photo-1152077.jpeg?w=600",
+    "category": "Backpack / Bag",
+    "date": "2026-03-06T14:00:00.000Z",
+    "uploadedBy": "Demo Staff",
+    "uploadedByEmail": "demo@school.org"
+  },
+  {
+    "id": "demo008",
+    "url": "https://images.pexels.com/photos/934673/pexels-photo-934673.jpeg?w=600",
+    "category": "Backpack / Bag",
+    "date": "2026-03-05T10:00:00.000Z",
+    "uploadedBy": "Demo Staff",
+    "uploadedByEmail": "demo@school.org"
+  },
+  {
+    "id": "demo009",
+    "url": "https://images.pexels.com/photos/1464625/pexels-photo-1464625.jpeg?w=600",
+    "category": "Other",
+    "date": "2026-03-05T15:30:00.000Z",
+    "uploadedBy": "Demo Staff",
+    "uploadedByEmail": "demo@school.org"
+  },
+  {
+    "id": "demo010",
+    "url": "https://images.pexels.com/photos/1191531/pexels-photo-1191531.jpeg?w=600",
+    "category": "Other",
+    "date": "2026-03-04T08:45:00.000Z",
+    "uploadedBy": "Demo Staff",
+    "uploadedByEmail": "demo@school.org"
+  },
+  {
+    "id": "demo011",
+    "url": "https://images.pexels.com/photos/4210866/pexels-photo-4210866.jpeg?w=600",
+    "category": "Jacket / Hoodie",
+    "date": "2026-03-04T11:00:00.000Z",
+    "uploadedBy": "Demo Staff",
+    "uploadedByEmail": "demo@school.org"
+  },
+  {
+    "id": "demo012",
+    "url": "https://images.pexels.com/photos/2529148/pexels-photo-2529148.jpeg?w=600",
+    "category": "Shirt / Pants",
+    "date": "2026-03-03T09:30:00.000Z",
+    "uploadedBy": "Demo Staff",
+    "uploadedByEmail": "demo@school.org"
+  }
+]
